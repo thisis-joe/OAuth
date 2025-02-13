@@ -185,7 +185,7 @@ public class ApiV1PostController {
         // 사용자 정보 확인
         String[] credentialsBits = credentials.split("/");
         long authorId = Long.parseLong(credentialsBits[0]);
-        String password = credentialsBits[1];
+        String password2 = credentialsBits[1];
 
         Member actor = memberService.findById(authorId).get();
         // 사용자 존재 여부 확인
@@ -194,7 +194,7 @@ public class ApiV1PostController {
         //  }
 
         // 비밀번호 검증 (인증)
-        if (!actor.getPassword().equals(password)) {
+        if (!actor.getPassword2().equals(password2)) {
             throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
         }
 
