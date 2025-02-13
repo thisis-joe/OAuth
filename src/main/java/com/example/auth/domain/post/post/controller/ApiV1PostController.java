@@ -25,6 +25,7 @@ public class ApiV1PostController {
     private final PostService postService;
     private final MemberService memberService;
 
+//글 목록(다건) 조회
     @GetMapping
     public RsData<List<PostDto>> getItems() { //여러 건 조회
         List<Post> posts = postService.getItems();
@@ -34,6 +35,7 @@ public class ApiV1PostController {
         return new RsData<>("200-1", "글 목록 조회가 완료되었습니다.", postDtos);
     }
 
+//글 단건 조회
     @GetMapping("{id}")
     public RsData<PostDto> getItem(@PathVariable long id) { //단 건 조회
         Post post = postService.getItem(id).get();
@@ -41,21 +43,40 @@ public class ApiV1PostController {
         return new RsData<>("200-1", "글 조회가 완료되었습니다.", new PostDto(post));
     }
 
+//글 삭제
+    record DeleteReqBody(@NotNull Long authorId,
+                         @NotBlank @Length(min = 3) String password) {}
     @DeleteMapping("/{id}")
-    public RsData<Void> delete(@PathVariable long id) {
+    public RsData<Void> delete(@PathVariable long id,
+                               @RequestHeader Long authorId,
+                               @RequestHeader String password) {
+
+        Member actor = memberService.findById(authorId).get();
+
+        if (!actor.getPassword().equals(password)) {
+            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+        }
+
         Post post = postService.getItem(id).get();
+
+        if(post.getAuthor().getId() != authorId) {
+            throw new ServiceException("403-1", "자신이 작성한 글만 삭제 가능합니다.");
+        }
+
         postService.delete(post);
 
-        return new RsData<>("204-1", "%d번 글 삭제가 완료되었습니다.".formatted(id));
+        return new RsData<>("200-1", "%d번 글 삭제가 완료되었습니다.".formatted(id));
     }
 
+//글 수정
     record ModifyReqBody(@NotBlank @Length(min = 3) String title,
                          @NotBlank @Length(min = 3) String content,
                          @NotNull Long authorId,
                          @NotBlank @Length(min = 3) String password){}
 
     @PutMapping("{id}")
-    public RsData<Void> modify(@PathVariable long id, @RequestBody @Valid ModifyReqBody body) {
+    public RsData<Void> modify(@PathVariable long id,
+                               @RequestBody @Valid ModifyReqBody body) {
 
         Member actor = memberService.findById(body.authorId()).get();
 
@@ -73,13 +94,13 @@ public class ApiV1PostController {
         return new RsData<>("200-2", "%d번 글 수정이 완료되었습니다.".formatted(id), null);
     }
 
+//글 작성
+
     record WriteReqBody(@NotBlank @Length(min = 3) String title,
                         @NotBlank @Length(min = 3) String content,
                         @NotNull Long authorId,
                         @NotBlank @Length(min = 3) String password){}
-
-    record WriteResBody(long id, long totalCount) {
-    }
+    record WriteResBody(long id, long totalCount) {}
 
     @PostMapping
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body) {
