@@ -100,16 +100,9 @@ public class ApiV1PostController {
 
     @PostMapping
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body,
-                                 @RequestHeader @NotNull Long authorId,
-                                 @RequestHeader @NotBlank String password) {
+                                 @RequestHeader @NotBlank String credentials) {
 
-        Member actor = memberService.findById(authorId).get();
-//        if(actor == null) {
-//            throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
-//        }
-        if(!actor.getPassword().equals(password)) {
-            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
-        }
+        Member actor = getAuthenticatedActor(credentials);
         Post post = postService.write(actor, body.title(), body.content());
 
         return new RsData<>(
@@ -117,5 +110,26 @@ public class ApiV1PostController {
                 "글 작성이 완료되었습니다.",
                 new PostDto(post)
         );
+    }
+
+///인증된 사용자 확인 (id,pw)
+    private Member getAuthenticatedActor(String credentials) {
+        String[] credentialsBits = credentials.split("/");
+        long authorId = Long.parseLong(credentialsBits[0]);
+        String password = credentialsBits[1];
+
+        Member actor = memberService.findById(authorId).get();
+
+        // 사용자 확인
+    //  if(actor == null) {
+    //      throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
+    //  }
+
+        // 비밀번호 검증 (인증)
+        if (!actor.getPassword().equals(password)) {
+            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+        }
+
+        return actor;
     }
 }
