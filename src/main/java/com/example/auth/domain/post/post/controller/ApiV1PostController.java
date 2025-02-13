@@ -1,6 +1,5 @@
 package com.example.auth.domain.post.post.controller;
 
-
 import com.example.auth.domain.member.member.entity.Member;
 import com.example.auth.domain.member.member.service.MemberService;
 import com.example.auth.domain.post.post.dto.PostDto;
@@ -45,7 +44,7 @@ public class ApiV1PostController {
 //글 삭제
     @DeleteMapping("/{id}")
     public RsData<Void> delete(@PathVariable long id,
-                               @RequestHeader @NotBlank String credentials) {
+                               @RequestHeader("Authorization") @NotBlank String credentials) {
 
         Member actor = getAuthenticatedActor(credentials);
         Post post = postService.getItem(id).get();
@@ -66,7 +65,7 @@ public class ApiV1PostController {
     @PutMapping("{id}")
     public RsData<Void> modify(@PathVariable long id,
                                @RequestBody @Valid ModifyReqBody body,
-                               @NotBlank @RequestHeader String credentials) {
+                               @RequestHeader("Authorization") @NotBlank String credentials) {
 
         Member actor = getAuthenticatedActor(credentials);
         Post post = postService.getItem(id).get();
@@ -86,7 +85,7 @@ public class ApiV1PostController {
 
     @PostMapping
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body,
-                                 @RequestHeader @NotBlank String credentials) {
+                                 @RequestHeader("Authorization") @NotBlank String credentials) {
 
         Member actor = getAuthenticatedActor(credentials);
         Post post = postService.write(actor, body.title(), body.content());
@@ -100,6 +99,9 @@ public class ApiV1PostController {
 
 ///인증된 사용자 확인 (id,pw)
     private Member getAuthenticatedActor(String credentials) {
+        // 관례상 Authorization 헤더값 앞에 Bearer 를 붙임 (예시) Bearer 4/user11234
+        credentials = credentials.substring("Bearer ".length());
+
         // 사용자 정보 확인
         String[] credentialsBits = credentials.split("/");
         long authorId = Long.parseLong(credentialsBits[0]);
