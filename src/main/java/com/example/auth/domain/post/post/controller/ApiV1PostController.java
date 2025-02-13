@@ -50,17 +50,26 @@ public class ApiV1PostController {
     }
 
     record ModifyReqBody(@NotBlank @Length(min = 3) String title,
-                         @NotBlank @Length(min = 3) String content){}
+                         @NotBlank @Length(min = 3) String content,
+                         @NotNull Long authorId,
+                         @NotBlank @Length(min = 3) String password){}
 
     @PutMapping("{id}")
     public RsData<Void> modify(@PathVariable long id, @RequestBody @Valid ModifyReqBody body) {
+
+        Member actor = memberService.findById(body.authorId()).get();
+
+        if (!actor.getPassword().equals(body.password())) {
+            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+        }
+
         Post post = postService.getItem(id).get();
+
+        if(post.getAuthor().getId() != body.authorId()) { //작성자 확인
+            throw new ServiceException("403-1", "자신이 작성한 글만 수정 가능합니다.");
+        }
         postService.modify(post, body.title(), body.title());
 
-//  moify 함수 반환이 ResponseEntity일때.
-//        return ResponseEntity
-//                .noContent()
-//                .build();
         return new RsData<>("200-2", "%d번 글 수정이 완료되었습니다.".formatted(id), null);
     }
 
@@ -76,9 +85,9 @@ public class ApiV1PostController {
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body) {
 
         Member actor = memberService.findById(body.authorId()).get();
-        if(actor == null) {
-            throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
-        }
+//        if(actor == null) {
+//            throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
+//        }
         if(!actor.getPassword().equals(body.password())) {
             throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
         }

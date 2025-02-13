@@ -1,4 +1,4 @@
-2025-02-13 10:28:56.239583+09:00 database: flush
+2025-02-13 11:25:04.152012+09:00 database: flush
 org.h2.message.DbException: General error: "org.h2.mvstore.MVStoreException: The file is locked: /Users/joseph/Desktop/BE5/auth/db_dev.mv.db [2.3.232/7]" [50000-232]
 	at org.h2.message.DbException.get(DbException.java:212)
 	at org.h2.message.DbException.convert(DbException.java:407)
@@ -74,6 +74,3 @@ Caused by: org.h2.mvstore.MVStoreException: The file is locked: /Users/joseph/De
 	at org.h2.mvstore.SingleFileStore.open(SingleFileStore.java:81)
 	at org.h2.mvstore.MVStore.<init>(MVStore.java:286)
 	... 57 more
-2025-02-13 10:31:01.466077+09:00 jdbc[13]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]PASSWORD"; expected "PREPARE"; SQL statement:
-PASSWORD [42001-232]
