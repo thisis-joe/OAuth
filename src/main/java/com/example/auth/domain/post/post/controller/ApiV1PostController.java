@@ -10,7 +10,6 @@ import com.example.auth.global.dto.RsData;
 import com.example.auth.global.exception.ServiceException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.bind.annotation.*;
@@ -46,18 +45,12 @@ public class ApiV1PostController {
 //글 삭제
     @DeleteMapping("/{id}")
     public RsData<Void> delete(@PathVariable long id,
-                               @RequestHeader @NotNull Long authorId,
-                               @RequestHeader @NotBlank String password) {
+                               @RequestHeader @NotBlank String credentials) {
 
-        Member actor = memberService.findById(authorId).get();
-
-        if (!actor.getPassword().equals(password)) {
-            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
-        }
-
+        Member actor = getAuthenticatedActor(credentials);
         Post post = postService.getItem(id).get();
 
-        if(post.getAuthor().getId() != authorId) {
+        if(post.getAuthor().getId() != actor.getId()) {
             throw new ServiceException("403-1", "자신이 작성한 글만 삭제 가능합니다.");
         }
 
@@ -73,18 +66,12 @@ public class ApiV1PostController {
     @PutMapping("{id}")
     public RsData<Void> modify(@PathVariable long id,
                                @RequestBody @Valid ModifyReqBody body,
-                               @RequestHeader @NotNull Long authorId,
-                               @RequestHeader @NotBlank String password) {
+                               @NotBlank @RequestHeader String credentials) {
 
-        Member actor = memberService.findById(authorId).get();
-
-        if (!actor.getPassword().equals(password)) {
-            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
-        }
-
+        Member actor = getAuthenticatedActor(credentials);
         Post post = postService.getItem(id).get();
 
-        if(post.getAuthor().getId() != authorId) { //작성자 확인
+        if(post.getAuthor().getId() != actor.getId()) { //작성자 확인
             throw new ServiceException("403-1", "자신이 작성한 글만 수정 가능합니다.");
         }
         postService.modify(post, body.title(), body.title());
@@ -93,7 +80,6 @@ public class ApiV1PostController {
     }
 
 //글 작성
-
     record WriteReqBody(@NotBlank @Length(min = 3) String title,
                         @NotBlank @Length(min = 3) String content){}
     record WriteResBody(long id, long totalCount) {}
@@ -114,13 +100,13 @@ public class ApiV1PostController {
 
 ///인증된 사용자 확인 (id,pw)
     private Member getAuthenticatedActor(String credentials) {
+        // 사용자 정보 확인
         String[] credentialsBits = credentials.split("/");
         long authorId = Long.parseLong(credentialsBits[0]);
         String password = credentialsBits[1];
 
         Member actor = memberService.findById(authorId).get();
-
-        // 사용자 확인
+        // 사용자 존재 여부 확인
     //  if(actor == null) {
     //      throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
     //  }
