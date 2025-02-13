@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+	//implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
@@ -34,6 +34,11 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Spring Security를 제외
+//	implementation('org.springframework.boot:spring-boot-starter-oauth2-authorization-server') {
+//		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-security'
+//	}
 }
 
 tasks.named('test') {
