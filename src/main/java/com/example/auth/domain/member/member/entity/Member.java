@@ -21,7 +21,7 @@ public class Member extends BaseTime {
     @Column(length = 100)
     private String password;
     @Column(length = 100, unique = true)
-    private String password2; //암호화된 password 아니고, 인증용으로만 사용
+    private String apiKey; //암호화된 password 아니고, 인증용으로만 사용
     @Column(length = 100)
     private String nickname;
 

@@ -107,8 +107,8 @@ public class ApiV1PostController {
     private Member getAuthenticatedActor() {
         // 관례상 Authorization 헤더값 앞에 Bearer 를 붙임 (예시) Bearer 4/user11234
         String authorizationValue = request.getHeader("Authorization");
-        String password2 = authorizationValue.substring("Bearer ".length());
-        Optional<Member> opActor = memberService.findByPassword2(password2);
+        String apiKey = authorizationValue.substring("Bearer ".length());
+        Optional<Member> opActor = memberService.findByApiKey(apiKey);
 
         // 사용자 정보 확인
         if(opActor.isEmpty()) {
