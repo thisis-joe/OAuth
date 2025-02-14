@@ -4,6 +4,7 @@ import com.example.auth.domain.member.member.dto.MemberDto;
 import com.example.auth.domain.member.member.entity.Member;
 import com.example.auth.domain.member.member.service.MemberService;
 import com.example.auth.global.dto.RsData;
+import com.example.auth.global.exception.ServiceException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,28 @@ public class ApiV1MemberController {
                 "201-1",
                 "회원 가입이 완료되었습니다.",
                 new MemberDto(member)
+        );
+    }
+
+    //로그인
+    record LoginReqBody(@NotBlank @Length(min = 3) String username,
+                        @NotBlank @Length(min = 3) String password) {
+    }
+
+    @PostMapping("/login")
+    public RsData<String> login(@RequestBody @Valid LoginReqBody body) {
+
+        Member actor = memberService.findByUsername(body.username())
+                .orElseThrow(() -> new ServiceException("401-2", "아이디 또는 비밀번호가 일치하지 않습니다."));
+
+        if(!actor.getPassword().equals(body.password())) {
+            throw new ServiceException("401-2", "아이디 또는 비밀번호가 일치하지 않습니다.");
+        }
+
+        return new RsData<>(
+                "200-1",
+                "%s님 환영합니다.".formatted(actor.getNickname()),
+                actor.getApiKey() //현재는 username을 apiKey로 사용 중.
         );
     }
 }
