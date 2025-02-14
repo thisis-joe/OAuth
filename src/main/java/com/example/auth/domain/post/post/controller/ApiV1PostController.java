@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/posts")
@@ -43,24 +44,6 @@ public class ApiV1PostController {
         return new RsData<>("200-1", "글 조회가 완료되었습니다.", new PostDto(post));
     }
 
-    //글 삭제
-    // 글 삭제 - @RequestHeader 와 String 사용
-//    @DeleteMapping("/{id}")
-//    public RsData<Void> delete(@PathVariable long id,
-//                               @RequestHeader("Authorization") @NotBlank String credentials) {
-//
-//        Member actor = getAuthenticatedActor(credentials);
-//        Post post = postService.getItem(id).get();
-//
-//        if (post.getAuthor().getId() != actor.getId()) {
-//            throw new ServiceException("403-1", "자신이 작성한 글만 삭제 가능합니다.");
-//        }
-//
-//        postService.delete(post);
-//
-//        return new RsData<>("200-1", "%d번 글 삭제가 완료되었습니다.".formatted(id));
-//    }
-
     //글 삭제 - HttpServletRequest 사용
     @DeleteMapping("/{id}")
     public RsData<Void> delete(@PathVariable long id) {
@@ -81,23 +64,6 @@ public class ApiV1PostController {
     record ModifyReqBody(@NotBlank @Length(min = 3) String title,
                          @NotBlank @Length(min = 3) String content) {
     }
-
-    //글 수정 - @RequestHeader 와 String 사용
-//    @PutMapping("{id}")
-//    public RsData<Void> modify(@PathVariable long id,
-//                               @RequestBody @Valid ModifyReqBody body,
-//                               @RequestHeader("Authorization") @NotBlank String credentials) {
-//
-//        Member actor = getAuthenticatedActor(credentials);
-//        Post post = postService.getItem(id).get();
-//
-//        if (post.getAuthor().getId() != actor.getId()) { //작성자 확인
-//            throw new ServiceException("403-1", "자신이 작성한 글만 수정 가능합니다.");
-//        }
-//        postService.modify(post, body.title(), body.title());
-//
-//        return new RsData<>("200-2", "%d번 글 수정이 완료되었습니다.".formatted(id), null);
-//    }
 
     //글 수정  - HttpServletRequest 사용
     @PutMapping("{id}")
@@ -123,21 +89,6 @@ public class ApiV1PostController {
     record WriteResBody(long id, long totalCount) {
     }
 
-    //글 작성 - @RequestHeader 와 String 사용
-//    @PostMapping
-//    public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body,
-//                                 @RequestHeader("Authorization") @NotBlank String credentials) {
-//
-//        Member actor = getAuthenticatedActor(credentials);
-//        Post post = postService.write(actor, body.title(), body.content());
-//
-//        return new RsData<>(
-//                "200-1",
-//                "글 작성이 완료되었습니다.",
-//                new PostDto(post)
-//        );
-//    }
-
     //글 작성 - HttpServletRequest 사용
     @PostMapping
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body) {
@@ -152,52 +103,18 @@ public class ApiV1PostController {
         );
     }
 
-    ///인증된 사용자 확인 (id,pw) - String 사용
-//    private Member getAuthenticatedActor(String credentials) {
-//        // 관례상 Authorization 헤더값 앞에 Bearer 를 붙임 (예시) Bearer 4/user11234
-//        credentials = credentials.substring("Bearer ".length());
-//
-//        // 사용자 정보 확인
-//        String[] credentialsBits = credentials.split("/");
-//        long authorId = Long.parseLong(credentialsBits[0]);
-//        String password = credentialsBits[1];
-//
-//        Member actor = memberService.findById(authorId).get();
-//        // 사용자 존재 여부 확인
-//        //  if(actor == null) {
-//        //      throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
-//        //  }
-//
-//        // 비밀번호 검증 (인증)
-//        if (!actor.getPassword().equals(password)) {
-//            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
-//        }
-//
-//        return actor;
-//    }
-
-    ///인증된 사용자 확인 (id,pw) - HttpServletRequest 사용
+    ///인증된 사용자 확인 (pw) - HttpServletRequest 사용
     private Member getAuthenticatedActor() {
         // 관례상 Authorization 헤더값 앞에 Bearer 를 붙임 (예시) Bearer 4/user11234
         String authorizationValue = request.getHeader("Authorization");
-        String credentials = authorizationValue.substring("Bearer ".length());
+        String password2 = authorizationValue.substring("Bearer ".length());
+        Optional<Member> opActor = memberService.findByPassword2(password2);
 
         // 사용자 정보 확인
-        String[] credentialsBits = credentials.split("/");
-        long authorId = Long.parseLong(credentialsBits[0]);
-        String password2 = credentialsBits[1];
-
-        Member actor = memberService.findById(authorId).get();
-        // 사용자 존재 여부 확인
-        //  if(actor == null) {
-        //      throw new ServiceException("404-1", "사용자를 찾을 수 없습니다.");
-        //  }
-
-        // 비밀번호 검증 (인증)
-        if (!actor.getPassword2().equals(password2)) {
-            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+        if(opActor.isEmpty()) {
+            throw new ServiceException("401-1", "잘못된 비밀번호 입니다.");
         }
 
-        return actor;
+        return opActor.get();
     }
 }
