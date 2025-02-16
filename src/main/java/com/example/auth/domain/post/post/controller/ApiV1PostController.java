@@ -5,9 +5,9 @@ import com.example.auth.domain.member.member.service.MemberService;
 import com.example.auth.domain.post.post.dto.PostDto;
 import com.example.auth.domain.post.post.entity.Post;
 import com.example.auth.domain.post.post.service.PostService;
+import com.example.auth.global.Rq;
 import com.example.auth.global.dto.RsData;
 import com.example.auth.global.exception.ServiceException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,6 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/posts")
@@ -23,8 +22,7 @@ import java.util.Optional;
 public class ApiV1PostController {
 
     private final PostService postService;
-    private final MemberService memberService;
-    private final HttpServletRequest request;
+    private final Rq rq;
 
     //글 목록(다건) 조회
     @GetMapping
@@ -48,7 +46,7 @@ public class ApiV1PostController {
     @DeleteMapping("/{id}")
     public RsData<Void> delete(@PathVariable long id) {
 
-        Member actor = getAuthenticatedActor();
+        Member actor = rq.getAuthenticatedActor();
         Post post = postService.getItem(id).get();
 
         if (post.getAuthor().getId() != actor.getId()) {
@@ -70,7 +68,7 @@ public class ApiV1PostController {
     public RsData<Void> modify(@PathVariable long id,
                                @RequestBody @Valid ModifyReqBody body) {
 
-        Member actor = getAuthenticatedActor();
+        Member actor = rq.getAuthenticatedActor();
         Post post = postService.getItem(id).get();
 
         if (post.getAuthor().getId() != actor.getId()) { //작성자 확인
@@ -103,18 +101,4 @@ public class ApiV1PostController {
         );
     }
 
-    ///인증된 사용자 확인 (pw) - HttpServletRequest 사용
-    private Member getAuthenticatedActor() {
-        // 관례상 Authorization 헤더값 앞에 Bearer 를 붙임 (예시) Bearer 4/user11234
-        String authorizationValue = request.getHeader("Authorization");
-        String apiKey = authorizationValue.substring("Bearer ".length());
-        Optional<Member> opActor = memberService.findByApiKey(apiKey);
-
-        // 사용자 정보 확인
-        if(opActor.isEmpty()) {
-            throw new ServiceException("401-1", "잘못된 비밀번호 입니다.");
-        }
-
-        return opActor.get();
-    }
 }
