@@ -1,6 +1,7 @@
 package com.example.auth.domain.post.comment.controller;
 
 import com.example.auth.domain.post.comment.dto.CommentDto;
+import com.example.auth.domain.post.comment.entity.Comment;
 import com.example.auth.domain.post.post.entity.Post;
 import com.example.auth.domain.post.post.service.PostService;
 import com.example.auth.global.exception.ServiceException;
@@ -30,4 +31,14 @@ public class ApiV1CommentController {
                 .map(CommentDto::new)
                 .toList();
     }
+
+    @GetMapping("{id}")
+    public CommentDto getItem(@PathVariable long postId, @PathVariable long id) {
+        Post post = postService.getItem(postId).orElseThrow(
+                () -> new ServiceException("404-1", "존재하지 않는 게시글입니다.")
+        );
+        Comment comment = post.getCommentById(id);
+        return new CommentDto(comment);
+    }
+
 }
