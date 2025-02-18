@@ -10,11 +10,11 @@ import java.util.Optional;
 // Request, Response, Session, Cookie, Header
 @Component
 @RequiredArgsConstructor
-@RequestScope
-public class Rq {
+@RequestScope //요청이 들어올 때마다 새로운 객체 생성 -> 각 요청마다 새로운 R객체 사용되므로, 멤버변수로 request를 가지고 있어도 문제 없음
+public class Rq { //인증로직 통합 클래스
     private final HttpServletRequest request;
     private final MemberService memberService;
-    public Member getAuthenticatedActor() {
+    public Member getAuthenticatedActor() { //Api 키 없으면 401 에러, 있으면 해당 멤버 반환
         String authorizationValue = request.getHeader("Authorization");
         String apiKey = authorizationValue.substring("Bearer ".length());
         Optional<Member> opActor = memberService.findByApiKey(apiKey);

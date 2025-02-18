@@ -1,7 +1,6 @@
 package com.example.auth.domain.post.post.controller;
 
 import com.example.auth.domain.member.member.entity.Member;
-import com.example.auth.domain.member.member.service.MemberService;
 import com.example.auth.domain.post.post.dto.PostDto;
 import com.example.auth.domain.post.post.entity.Post;
 import com.example.auth.domain.post.post.service.PostService;
@@ -91,7 +90,7 @@ public class ApiV1PostController {
     @PostMapping
     public RsData<PostDto> write(@RequestBody @Valid WriteReqBody body) {
 
-        Member actor = getAuthenticatedActor();
+        Member actor = rq.getAuthenticatedActor();
         Post post = postService.write(actor, body.title(), body.content());
 
         return new RsData<>(
