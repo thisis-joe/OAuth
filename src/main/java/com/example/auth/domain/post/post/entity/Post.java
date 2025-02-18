@@ -29,7 +29,7 @@ public class Post extends BaseTime {
     @OneToMany(mappedBy = "post",
             cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();//Post 엔터티가 Comment 리스트를 포함하도록 함. 즉, 해당 Post가 삭제되면 Comment도 삭제됨.
-    public void addComment(Member author, String content) {
+    public Comment addComment(Member author, String content) {
         Comment comment = Comment
                 .builder()
                 .post(this)
@@ -37,6 +37,7 @@ public class Post extends BaseTime {
                 .content(content)
                 .build();
         comments.add(comment);
+        return comment;
     }
 
     //id로 댓글 찾기
